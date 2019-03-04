@@ -34,13 +34,14 @@ class System(object):
         
         self.p0=-0.5*self.N*self.dp
         self.p=self.p0 + self.dp*np.arange(self.N)
+        
+        self.v_x=v_x
+        self.x=x
 
         self._set_psi_x(psi_x_initial)
         self.compute_psi_p()
         
-        self.v_x=v_x
-        self.x=x
-    #Setter and getter functions for psi x and p
+     #Setter and getter functions for psi x and p
     def _set_psi_x(self, psi_x):
         self._psi_x=psi_x*np.exp(-1.j*self.p[0]*self.x)*self.dx/np.sqrt(2*np.pi)
 
@@ -51,7 +52,7 @@ class System(object):
         self._psi_p = psi_p*np.exp(1.j*self.x[0]*self.dk*np.arange(self.N))
 
     def _get_psi_p(self):
-        return self._psi_p*np.exp(-1.jself.x[0]*self.dk*np.arange(self.N))
+        return self._psi_p*np.exp(-1.j*self.x[0]*self.dk*np.arange(self.N))
     #####
 
     def compute_psi_p(self):
@@ -65,7 +66,7 @@ class System(object):
 
         self._psi_x *= np.exp(-1.j*0.5*dt*self.v_x)
         
-        for i in xrange(Nt_step):
+        for i in xrange(int(Nt_step)):
             self.compute_psi_p()
             self._psi_p *= np.exp(-1.j*dt*0.5*self.p*self.p)
             self.compute_psi_x()
@@ -74,7 +75,7 @@ class System(object):
         self.compute_psi_p()
         self._psi_p*=np.exp(-1.j*0.5*dt*self.p*self.p)
 
-        self.comput_psi_x() 
+        self.compute_psi_x() 
         self._psi_x *= np.exp(-1.j*0.5*dt*self.v_x)
 
 def energy_eigenstate(n): #Factory function to generate psi
@@ -98,6 +99,8 @@ def harmonic_potential(x):
 
 def main():
     ##Defining Parameters##
+    
+    T=2*np.pi
     dt=.05     #arbitrary 'small' dt 
     hbar=1      #Reduced Planck                      
     N=2**11       #number of spatial samples
@@ -120,7 +123,12 @@ def main():
 
     v_n=harmonic_potential(x)
 
-    harmonic_osc = System()
+    harmonic_osc = System(x, psi(x), v_n)
+
+    harmonic_osc.time_evolve(dt, T/dt)
+
+    final = harmonic_osc._get_psi_x()
+
 
     #Time Evo#
     
@@ -131,7 +139,7 @@ def main():
 
 
     fig, ax = plt.subplots()
-    ax.plot(x, psi_x_periodic.real, x, psi_x_periodic.imag)
+    ax.plot(x, final.real, x, final.imag)
 
     #ax.plot(x, intermed_psi.real, x, intermed_psi.imag)
 
