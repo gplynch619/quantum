@@ -93,6 +93,10 @@ class System(object):
         
         self.t += dt*Nt_step
 
+def harmonic_potential(x):
+    return 0.5*x*x #1/2m*w^2*x^2 but ignoring constants for now
+
+##Wavefunction states##
 def energy_eigenstate(n): #Factory function to generate psi
     ''' This function is used to generate the energy eigenstates of the QHO.
     Parameters
@@ -109,8 +113,11 @@ def energy_eigenstate(n): #Factory function to generate psi
     
     return psi
 
-def harmonic_potential(x):
-    return 0.5*x*x #1/2m*w^2*x^2 but ignoring constants for now
+def coherent_state(a):
+    
+    def psi(x):
+        return (1/np.pi**-0.25)*np.exp(-(x-a)**2 + 0.5*(a**2- np.abs(a)**2))
+    return psi
 
 def main():
     ##Defining Parameters##
@@ -136,7 +143,7 @@ def main():
     p=np.array(p)
 
     #Initialize wavefunction and potential#
-    psi=energy_eigenstate(1)
+    psi=coherent_state(1)
 
     v_n=harmonic_potential(x)
 
@@ -146,15 +153,16 @@ def main():
     #Uncomment the following lines if you just want to evolve to some endpoint
     #harmonic_osc.time_evolve(dt, Nt_steps)
     #final = harmonic_osc._get_psi_x()
+    
+    #fig1, ax=plt.subplots()
+    #ax.plot(harmonic_osc.x, final)
     ####
 
-    
     #dx/sqrt(2pi) * psi(x_n)* exp(-ik0x_n) <--> \tilde(psi)(k_m)exp(-im*x0*dk)
-    #operator_exp(x)(t/2)F^-1[operator_exp(p)F(operator_exp(x)(t/2)*psi(x))]
     
     ##Animation##
     #Setting up plot
-    fig, axes = plt.subplots(1,2, figsize=(4,2))
+    fig, axes = plt.subplots(1,2)
     
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
@@ -171,8 +179,10 @@ def main():
     text1 = axes[0].text(.15, 0.9, "", fontsize=16 ,transform=axes[0].transAxes)
     text2 = axes[1].text(.15, 0.9, "", fontsize=16, transform=axes[1].transAxes)
 
-    axes[0].set_title(r"$\psi$, n=1 State of QHO", fontsize=16)
-    axes[1].set_title(r"$|\psi|^2$, n=1 State of QHO", fontsize=16)
+    state='a=1 Coherent State of QHO'
+
+    axes[0].set_title(r"$\psi$, {}".format(state), fontsize=16)
+    axes[1].set_title(r"$|\psi|^2$, {}".format(state), fontsize=16)
 
     axes[0].legend((psi_real_line, psi_imag_line), (r'$Re(\psi)$', r'$Im(\psi)$'))
 
@@ -194,16 +204,14 @@ def main():
         psi_square_line.set_data(harmonic_osc.x, np.abs(harmonic_osc._get_psi_x())**2)
         text1.set_text('t={}'.format(harmonic_osc.t))
         text2.set_text('t={}'.format(harmonic_osc.t))
-        return psi_real_line, psi_imag_line
+        return psi_real_line, psi_imag_line, psi_square_line
     
     axes[0].grid(True)
     axes[1].grid(True)
 
     anim = animation.FuncAnimation(fig, animate, init_func=init, frames=frames, interval=120, blit=False)
         
-    anim.save('n1_state_animation.gif', dpi=80, writer='imagemagick')
-
-    #ax.grid(True)
+    anim.save('a1_coherent_state_animation.gif', dpi=80, writer='imagemagick')
 
     plt.show()
 
