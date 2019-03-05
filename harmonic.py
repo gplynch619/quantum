@@ -116,7 +116,7 @@ def energy_eigenstate(n): #Factory function to generate psi
 def coherent_state(a):
     
     def psi(x):
-        return (1/np.pi**-0.25)*np.exp(-(x-a)**2 + 0.5*(a**2- np.abs(a)**2))
+        return (1/np.pi**0.25)*np.exp(-(np.sqrt(0.5)x-a)**2 + 0.5*(a**2- np.abs(a)**2))
     return psi
 
 def main():
