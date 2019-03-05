@@ -16,6 +16,7 @@ TODO:
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import animation
 
 from scipy.special import hermite
 
@@ -27,7 +28,18 @@ class System(object):
     '''
 
     def __init__(self, x, psi_x_initial, v_x, hbar=1):
-        
+        '''
+        Initializer for quantum system
+        Parameters
+        -------
+        x : A numpy array containing evenly spaced samples of the wavefunction domain. x[0]=x0
+        and x[-1]=xf. The number of samples N is computed from the size of this array
+
+        psi_x_initial : An array of size N containing the initial values for the wavefunction
+        to be evolved
+
+        v_x : An array of size N containing the values for the system potential 
+        '''
         self.N=x.shape[0]
         self.dx=x[1]-x[0]
         self.dp=2*np.pi/(self.N*self.dx)
@@ -37,7 +49,8 @@ class System(object):
         
         self.v_x=v_x
         self.x=x
-
+        self.t=0
+        
         self._set_psi_x(psi_x_initial)
         self.compute_psi_p()
         
@@ -61,12 +74,12 @@ class System(object):
     def compute_psi_x(self):
         self._psi_x=np.fft.ifft(self._psi_p)
 
-    def time_evolve(self, dt, Nt_step):
+    def time_evolve(self, dt, Nt_step): #this is where the magic happens
         self.dt=dt
 
         self._psi_x *= np.exp(-1.j*0.5*dt*self.v_x)
         
-        for i in xrange(int(Nt_step)):
+        for i in np.arange(Nt_step):
             self.compute_psi_p()
             self._psi_p *= np.exp(-1.j*dt*0.5*self.p*self.p)
             self.compute_psi_x()
@@ -77,6 +90,8 @@ class System(object):
 
         self.compute_psi_x() 
         self._psi_x *= np.exp(-1.j*0.5*dt*self.v_x)
+        
+        self.t += dt*Nt_step
 
 def energy_eigenstate(n): #Factory function to generate psi
     ''' This function is used to generate the energy eigenstates of the QHO.
@@ -100,10 +115,12 @@ def harmonic_potential(x):
 def main():
     ##Defining Parameters##
     
-    T=2*np.pi
-    dt=.05     #arbitrary 'small' dt 
+    dt=.01      #arbitrary 'small' dt 
     hbar=1      #Reduced Planck                      
-    N=2**11       #number of spatial samples
+    N=2**11     #number of spatial samples
+    Nt_steps=50
+    t_max = 12
+    frames = int(t_max/float(Nt_steps*dt))
     ####
     
     #Initialize position and momentum grid#
@@ -119,29 +136,72 @@ def main():
     p=np.array(p)
 
     #Initialize wavefunction and potential#
-    psi=energy_eigenstate(0)
+    psi=energy_eigenstate(1)
 
     v_n=harmonic_potential(x)
 
+    #Begin evolution of system#
     harmonic_osc = System(x, psi(x), v_n)
 
-    harmonic_osc.time_evolve(dt, T/dt)
-
-    final = harmonic_osc._get_psi_x()
-
-
-    #Time Evo#
-    
-    #dx/sqrt(2pi) * psi(x_n)* exp(-ik0x_n) <--> \tilde(psi)(k_m)exp(-im*x0*dk)
+    #Uncomment the following lines if you just want to evolve to some endpoint
+    #harmonic_osc.time_evolve(dt, Nt_steps)
+    #final = harmonic_osc._get_psi_x()
     ####
 
+    
+    #dx/sqrt(2pi) * psi(x_n)* exp(-ik0x_n) <--> \tilde(psi)(k_m)exp(-im*x0*dk)
     #operator_exp(x)(t/2)F^-1[operator_exp(p)F(operator_exp(x)(t/2)*psi(x))]
+    
+    ##Animation##
+    #Setting up plot
+    fig, axes = plt.subplots(1,2, figsize=(4,2))
+    
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif')
 
+    psi_real_line, = axes[0].plot([], [], lw=2)
+    psi_imag_line, = axes[0].plot([], [], lw=2, color='orange')
+    psi_square_line, = axes[1].plot([], [], lw=2)
 
-    fig, ax = plt.subplots()
-    ax.plot(x, final.real, x, final.imag)
+    for ax in axes:
+        ax.set_xlim([-6, 6])
+        ax.set_ylim([-1, 1])
+   
+    axes[1].set_ylim([-.1, 1])
+    text1 = axes[0].text(.15, 0.9, "", fontsize=16 ,transform=axes[0].transAxes)
+    text2 = axes[1].text(.15, 0.9, "", fontsize=16, transform=axes[1].transAxes)
 
-    #ax.plot(x, intermed_psi.real, x, intermed_psi.imag)
+    axes[0].set_title(r"$\psi$, n=1 State of QHO", fontsize=16)
+    axes[1].set_title(r"$|\psi|^2$, n=1 State of QHO", fontsize=16)
+
+    axes[0].legend((psi_real_line, psi_imag_line), (r'$Re(\psi)$', r'$Im(\psi)$'))
+
+    for ax in axes:
+        ax.set_xlabel(r"Position $(\sqrt{\hbar/m \omega})$")
+
+    def init():
+        psi_real_line.set_data([],[])
+        psi_imag_line.set_data([],[])
+        psi_square_line.set_data([],[])
+        text1.set_text("")
+        text2.set_text("")
+        return psi_real_line, psi_imag_line, psi_square_line, text1, text2
+
+    def animate(i):
+        harmonic_osc.time_evolve(dt, Nt_steps)
+        psi_real_line.set_data(harmonic_osc.x, harmonic_osc._get_psi_x().real)
+        psi_imag_line.set_data(harmonic_osc.x, harmonic_osc._get_psi_x().imag)
+        psi_square_line.set_data(harmonic_osc.x, np.abs(harmonic_osc._get_psi_x())**2)
+        text1.set_text('t={}'.format(harmonic_osc.t))
+        text2.set_text('t={}'.format(harmonic_osc.t))
+        return psi_real_line, psi_imag_line
+    
+    axes[0].grid(True)
+    axes[1].grid(True)
+
+    anim = animation.FuncAnimation(fig, animate, init_func=init, frames=frames, interval=120, blit=False)
+        
+    anim.save('n1_state_animation.gif', dpi=80, writer='imagemagick')
 
     #ax.grid(True)
 
