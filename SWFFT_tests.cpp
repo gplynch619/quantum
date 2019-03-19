@@ -10,16 +10,16 @@
 #include <omp.h>
 #endif
 
-#include "../SWFFT/complex-type.h"
-#include "../SWFFT/AlignedAllocator.h"
-#include "../SWFFT/Error.h"
-#include "../SWFFT/TimingStats.h"
+#include "/home/lynchg/SWFFT/complex-type.h"
+#include "/home/lynchg/SWFFT/AlignedAllocator.h"
+#include "/home/lynchg/SWFFT/Error.h"
+#include "/home/lynchg/SWFFT/TimingStats.h"
 
-#include "../SWFFT/Distribution.hpp"
+#include "/home/lynchg/SWFFT/Distribution.hpp"
 #ifndef DFFT_TIMING
 #define DFFT_TIMING 1
 #endif
-#include "../SWFFT/Dfft.hpp"
+#include "/home/lynchg/SWFFT/Dfft.hpp"
 
 #define ALIGN 16
 
@@ -121,8 +121,6 @@ void check_kspace(Dfft &dfft, complex_t *a) {
 }//this block takes the k space values as input and calculates the global min and maxes for 
 //real and imag. It prints the real and imaginary range of values as an int and hex
 
-
-
 void check_rspace(Dfft &dfft, complex_t *a){
 	
 	const int *self = dfft.self_rspace();
@@ -144,7 +142,7 @@ void check_rspace(Dfft &dfft, complex_t *a){
   
 	size_t local_indx = 0;
 	for(size_t i=0; i<(size_t)local_ng[0]; i++) {
-		size_t global_i = local_ng[0]*self
+		size_t global_i = local_ng[0]*self[0]+i;
 			//x....|.....|..... local_ng=5, self=0, 
 			//.....|x....|..... local_ng=5, self=1, 
 			//.x...|.....|..... local_ng=5, self=0, i=1
