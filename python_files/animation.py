@@ -16,13 +16,16 @@ TODO:
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import constants
 from matplotlib import animation
 from quantum_system import *
 
 from scipy.special import hermite
 
 def harmonic_potential(x):
-    return 0.5*x*x #1/2m*w^2*x^2 but ignoring constants for now
+    m=constants.M
+    omega=constants.OMEGA
+    return 0.5*m*omega*x*x #1/2m*w^2*x^2 but ignoring constants for now
 
 ##Wavefunction states##
 def energy_eigenstate(n): #Factory function to generate psi
@@ -36,8 +39,11 @@ def energy_eigenstate(n): #Factory function to generate psi
     -------
     psi(x) : A function that when evaluted gives the value of the indicated state at the position.
     '''
+    m=constants.M
+    omega=constants.OMEGA
+    hbar=constants.HBAR
     def psi(x):
-        return (1.0/np.sqrt((2**n)*math.factorial(n)))*np.pi**(-1.0/4)*np.exp((-x**2)/2)*hermite(n)(x)
+        return ((m*omega/(np.pi*hbar))**0.25)*(1.0/np.sqrt((2**n)*math.factorial(n)))*np.exp((-m*omega*x**2)/(2*hbar))*hermite(n)(np.sqrt(m*omega/hbar)*x)
     
     return psi
 
@@ -49,13 +55,18 @@ def coherent_state(a):
 
 def main():
     ##Defining Parameters##
-    
-    dt=.01      #arbitrary 'small' dt 
-    hbar=1      #Reduced Planck                      
-    N=2**11     #number of spatial samples
-    Nt_steps=50
-    t_max = 12
-    frames = int(t_max/float(Nt_steps*dt))
+
+    m=constants.M
+    omega=constants.OMEGA
+    hbar=constants.HBAR
+
+    sampling=100.0      #arbitrary 'small' dt 
+    nsamples=1256
+    dt=1.0/sampling
+    N=2**9     #number of spatial samples
+    T=nsamples*dt
+
+    frames = int(3*T)
     ####
     
     #Initialize position and momentum grid#
@@ -71,7 +82,8 @@ def main():
     p=np.array(p)
 
     #Initialize wavefunction and potential#
-    psi=coherent_state(1)
+    #psi=coherent_state(1)
+    psi=energy_eigenstate(0)
 
     v_n=harmonic_potential(x)
 
@@ -126,20 +138,22 @@ def main():
         return psi_real_line, psi_imag_line, psi_square_line, text1, text2
 
     def animate(i):
-        harmonic_osc.time_evolve(dt, Nt_steps)
+        harmonic_osc.time_evolve(dt, 33)
         psi_real_line.set_data(harmonic_osc.x, harmonic_osc._get_psi_x().real)
         psi_imag_line.set_data(harmonic_osc.x, harmonic_osc._get_psi_x().imag)
         psi_square_line.set_data(harmonic_osc.x, np.abs(harmonic_osc._get_psi_x())**2)
         text1.set_text('t={}'.format(harmonic_osc.t))
         text2.set_text('t={}'.format(harmonic_osc.t))
         return psi_real_line, psi_imag_line, psi_square_line
-    
+        print(i)
+
     axes[0].grid(True)
     axes[1].grid(True)
-
-    anim = animation.FuncAnimation(fig, animate, init_func=init, frames=frames, interval=120, blit=False)
+    fps=15.0
+    mult=(1.0/fps)*1000
+    anim = animation.FuncAnimation(fig, animate, init_func=init, frames=frames, interval=mult, blit=False)
         
-    anim.save('a1_coherent_state_animation.gif', dpi=80, writer='imagemagick')
+    anim.save('test.gif', dpi=80, writer='imagemagick')
 
     plt.show()
 
