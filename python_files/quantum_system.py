@@ -8,6 +8,7 @@ initial wavefunction, spatial domain, and potential.
 '''
 
 import math
+import constants
 import numpy as np
 
 class System(object):
@@ -69,18 +70,24 @@ class System(object):
     def time_evolve(self, dt, Nt_step): #this is where the magic happens
         self.dt=dt
 
-        self._psi_x *= np.exp(-1.j*0.5*dt*self.v_x)
-        
-        for i in np.arange(Nt_step):
-            self.compute_psi_p()
-            self._psi_p *= np.exp(-1.j*dt*0.5*self.p*self.p)
+#        self._psi_x *= np.exp(-1.j*0.5*dt*self.v_x)
+        #self.compute_psi_p()
+        self._psi_p *= np.exp(-1.j*dt*0.25*self.p*self.p/(constants.HBAR*constants.M))
+        #the negative comes from fourier transforming the (p <-> -ih\nabla)
+        #so \nabla^2 <-> -p^2/h^2
+
+        for i in np.arange(Nt_step-1):
             self.compute_psi_x()
             self._psi_x *= np.exp(-1.j*dt*self.v_x)
-
-        self.compute_psi_p()
-        self._psi_p*=np.exp(-1.j*0.5*dt*self.p*self.p)
+            self.compute_psi_p()
+            self._psi_p *= np.exp(-1.j*dt*0.5*self.p*self.p/(constants.HBAR*constants.M))
 
         self.compute_psi_x() 
-        self._psi_x *= np.exp(-1.j*0.5*dt*self.v_x)
+        self._psi_x *= np.exp(-1.j*dt*self.v_x)
+
+        self.compute_psi_p()
+        self._psi_p *= np.exp(-1.j*dt*0.25*self.p*self.p/(constants.HBAR*constants.M))
         
+        self.compute_psi_x()
+
         self.t += dt*Nt_step
