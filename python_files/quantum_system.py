@@ -70,8 +70,6 @@ class System(object):
     def time_evolve(self, dt, Nt_step): #this is where the magic happens
         self.dt=dt
 
-#        self._psi_x *= np.exp(-1.j*0.5*dt*self.v_x)
-        #self.compute_psi_p()
         self._psi_p *= np.exp(-1.j*dt*0.25*self.p*self.p/(constants.HBAR*constants.M))
         #the negative comes from fourier transforming the (p <-> -ih\nabla)
         #so \nabla^2 <-> -p^2/h^2
@@ -91,3 +89,27 @@ class System(object):
         self.compute_psi_x()
 
         self.t += dt*Nt_step
+
+def initialize_grid(xstart,  ng, third, endpoint_mode=False):
+    #this initializes a grid between xstart and xstop with ng points
+    #the momentum grid is calculated from the dual to the position grid
+    #this grid is then used to initialize the system (in System.__init__())
+    if endpoint_mode:
+        x0=xstart
+        xf=third
+        dx=(xf-x0)/ng
+        x=[x0+n*dx for n in range(ng)]
+        x=np.array(x)
+    else:
+        x0=xstart
+        dx=third
+        x=[x0+n*dx for n in range(ng)]
+        x=np.array(x)
+
+    p0=-0.5*ng*dx
+    dp=2*np.pi/(ng*dx)
+    p=[p0+m*dp for m in range(ng)]
+    p=np.array(p)
+
+    return x,p
+

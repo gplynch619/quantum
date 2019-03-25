@@ -2,3 +2,6 @@ M=1.0
 OMEGA=1.0
 #HBAR=6.58e-16
 HBAR=1.0
+
+A=1.9
+SIGMA=0.87
