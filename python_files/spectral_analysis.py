@@ -14,7 +14,7 @@ import numpy as np
 import constants
 
 import matplotlib.pyplot as plt
-from scipy.signal import argrelextrema
+from scipy.signal import find_peaks
 
 from quantum_system import *
 #from harmonic import *
@@ -28,7 +28,7 @@ def main():
     hbar=constants.HBAR      #Reduced Planck                      
 
     #Initialize timing info (how long to simulate for, and smallest time step)#
-    dt=.005  #time step
+    dt=.001  #time step
     ntime=16384      #number of time steps
     sampling=1.0/dt   #how many samples per unit (f in hertz)
     T=ntime*dt        #total time
@@ -75,7 +75,7 @@ def main():
     energy_spec=np.fft.fft(cor_func_t)/ntime
     energy_spec=np.fft.fftshift(energy_spec)    
 
-    plt.rc('text', usetex=True)
+    #plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
     fig, ax = plt.subplots(2,1)
     #dx/sqrt(2pi) * psi(x_n)* exp(-ik0x_n) <--> \tilde(psi)(k_m)exp(-im*x0*dk)
@@ -87,13 +87,12 @@ def main():
    
     ax[0].legend()
 
-    ax[1].plot(-2*np.pi*ts, np.abs(energy_spec))
-#    ax[1].scatter(peaks, np.abs(energy_spec)[peaks], marker='x')
+    ax[1].plot(2*np.pi*ts, np.abs(energy_spec))
     
     ax[1].set_yscale('log') 
     ax[1].set_xlabel(r"Energy ($\hbar \omega$)")
     ax[1].set_ylabel(r"Spectral power")
-    ax[1].set_xlim([-150, 20])
+    ax[1].set_xlim([-20, 150])
     plt.show()
 
     fig.savefig("adw_spectrum.png")
