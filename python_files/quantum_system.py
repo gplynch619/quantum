@@ -90,7 +90,7 @@ class System(object):
 
         self.t += dt*Nt_step
 
-def initialize_grid(xstart,  ng, third, endpoint_mode=False):
+def initialize_grid(xstart,  ng, third, endpoint_mode=True):
     #this initializes a grid between xstart and xstop with ng points
     #the momentum grid is calculated from the dual to the position grid
     #this grid is then used to initialize the system (in System.__init__())
