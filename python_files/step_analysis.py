@@ -3,6 +3,7 @@ gabriel.p.lynch@gmail.com
 ANL-CPAC
 '''
 
+import os
 import math
 import numpy as np
 import constants
@@ -28,27 +29,25 @@ def main():
     v=harmonic_potential()         #from harmonic.py
     v_n=v(x)
     qs = System(x, psi(x),v_n)
-    
+    ntimes_array=None 
     dts=[]
     peaks=[]
     steps=[]
     T=4000
-    ntimes_array=None
-    
     if rank==0:
-        ntimes_array=np.arange(start=20, stop=81940, step=10)
+        ntimes_array=np.arange(start=20, stop=81940, step=10, dtype='i')
         data_size=ntimes_array.size
         if not os.path.exists("MPI_{}T".format(T)):
             os.mkdir("MPI_{}T".format(T))
     else:
         data_size=None
 
-    data_size=comm.Bcast(data_size, root=0)
+    data_size=comm.bcast(data_size, root=0)
     local_size = int(data_size/size)
-
-    ntimes_local=np.empty(local_size, dtype='d')
-
+    ntimes_local=np.empty(data_size, dtype='i')
     comm.Scatter(ntimes_array, ntimes_local, root=0)
+    ntimes_local=np.resize(ntimes_local, local_size)
+    print("proc {0} has ntimes_local:\t{1}".format(rank, ntimes_local))
 
     for ntime in ntimes_local: 
         dt= float(T)/ntime
@@ -71,12 +70,23 @@ def main():
         peaks.append(peaks_e[-1])
         dts.append(dt)
         steps.append(ntime)
-    
+        print("Rank {0} completed ntime {1}".format(rank, ntime))
+
     dts=np.array(dts)
     peaks=np.array(peaks)
     steps=np.array(steps)
-    with open("MPI_{0}T/MPI_peaks_{1}.npz".format(T, rank)) as filename:
-        np.savez(filename, dts, steps, peaks)
+    
+    if rank==0:
+        global_dts=np.empty(data_size, dtype='f')
+        global_peaks=np.empty(data_size, dtype='f')
+        global_steps=np.empty(data_size, dtype='i')
+
+    comm.Gather(dts, global_dts, root=0)
+    comm.Gather(peaks, global_peaks, root=0)
+    comm.Gather(steps, global_steps, root=0)
+    if rank==0: 
+        with open("MPI_{0}T/MPI_peaks.npz".format(T)) as filename:
+            np.savez(filename, global_dts, global_steps, global_peaks)
 
 if __name__=="__main__":
     main()
