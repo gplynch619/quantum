@@ -11,15 +11,19 @@ xstart: -20
 xstop_or_dx: 20.0 #if endpoint_mode, then this is xstop
 endpoint_mode: True
 
+output: test
+
 potential:
   type: harmonic_potential
-    params:
-      mass: *mass
-      omega: *omega
+  params:
+    mass: *mass
+    omega: *omega
+    hbar: *hbar
 
 wavefunction:
   type: energy_eigenstate
-    params:
-      level: 0
-      mass: *mass
-      omega: *omega
+  params:
+    level: 0
+    mass: *mass
+    omega: *omega
+    hbar: *hbar
