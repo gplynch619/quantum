@@ -1,3 +1,5 @@
+import numpy as np
+
 def asym_double_well_potential(params):
     def v(x):
         k0=params['k0']
@@ -15,4 +17,8 @@ def harmonic_potential(params):
         return 0.5*m*(omega**2)*x*x #1/2m*w^2*x^2 but ignoring constants for n.0001avefunction states##
     return v
 
-
+def nonlinear_potential(params):
+    def v(psi):
+        beta=params['beta']
+        return beta*np.abs(psi)**2
+    return v

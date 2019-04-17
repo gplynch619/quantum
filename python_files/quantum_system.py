@@ -12,7 +12,7 @@ import numpy as np
 
 class System(object):
     
-    def __init__(self, x, psi_x_initial, v_x, hbar=1):
+    def __init__(self, x, psi, v, nonlinear=False):
         '''
         Initializer for quantum system
         Parameters
@@ -23,8 +23,13 @@ class System(object):
         psi_x_initial : An array of size N containing the initial values for the wavefunction
         to be evolved
 
-        v_x : An array of size N containing the values for the system potential 
+        v_x : An array of size N containing the values for the system potential
+
+        nonlinear : A boolean specifying whether the system is linear or nonlinear
         '''
+        self.nonlinear=nonlinear
+        self.v=v
+
         self.N=x.shape[0]
         self.dx=x[1]-x[0]
         self.dp=2*np.pi/(self.N*self.dx)
@@ -32,15 +37,19 @@ class System(object):
         self.p0=-0.5*self.N*self.dp
         self.p=self.p0 + self.dp*np.arange(self.N)
         
-        self.v_x=v_x
         self.x=x
         self.t=0
         
-        self._set_psi_x(psi_x_initial)
-        self._set_initial_psi(psi_x_initial)
+        self._set_psi_x(psi(x))
+        self._set_initial_psi(psi(x))
         self.compute_psi_p()
-        
-     #Setter and getter functions for psi x and p
+
+        if self.nonlinear:
+            self.v_x=v(self._get_psi_x())
+        else:
+            self.v_x=v(self.x)
+
+     #Setter and getter functions for psi x and p, and v
     def _set_initial_psi(self, psi0_x):
         self._psi0_x=psi0_x*np.exp(-1.j*self.p[0]*self.x)*self.dx/np.sqrt(2*np.pi)
     
@@ -58,7 +67,13 @@ class System(object):
 
     def _get_psi_p(self):
         return self._psi_p*np.exp(-1.j*self.x[0]*self.dk*np.arange(self.N))
+    
     #####
+    def update_v_x(self):
+        self.v_x=self.v(self._get_psi_x())
+
+    def is_nonlinear(self):
+        return self.nonlinear
 
     def compute_psi_p(self):
         self._psi_p=np.fft.fft(self._psi_x)
@@ -66,30 +81,25 @@ class System(object):
     def compute_psi_x(self):
         self._psi_x=np.fft.ifft(self._psi_p)
 
-    def time_evolve(self, dt, Nt_step, params): #this is where the magic happens
+    def time_evolve(self, dt, Nt, params): #this is where the magic happens
         self.dt=dt
         hbar=params['hbar']
         m=params['mass']
 
-        self._psi_p *= np.exp(-1.j*dt*0.25*self.p*self.p/(hbar*m))
         #the negative comes from fourier transforming the (p <-> -ih\nabla)
         #so \nabla^2 <-> -p^2/h^2
 
-        for i in np.arange(Nt_step-1):
+        for i in np.arange(Nt):
+            self._psi_p *= np.exp(-1.j*dt*0.25*self.p*self.p/(hbar*m))
             self.compute_psi_x()
             self._psi_x *= np.exp(-1.j*dt*self.v_x)
             self.compute_psi_p()
-            self._psi_p *= np.exp(-1.j*dt*0.5*self.p*self.p/(hbar*m))
+            self._psi_p *= np.exp(-1.j*dt*0.25*self.p*self.p/(hbar*m))
+            if self.is_nonlinear():
+                self.compute_psi_x
+                self.update_v_x()
 
-        self.compute_psi_x() 
-        self._psi_x *= np.exp(-1.j*dt*self.v_x)
-
-        self.compute_psi_p()
-        self._psi_p *= np.exp(-1.j*dt*0.25*self.p*self.p/(hbar*m))
-        
-        self.compute_psi_x()
-
-        self.t += dt*Nt_step
+        self.t += dt*Nt
 
 def initialize_grid(xstart,  ng, third, endpoint_mode=True):
     #this initializes a grid between xstart and xstop with ng points
@@ -113,4 +123,3 @@ def initialize_grid(xstart,  ng, third, endpoint_mode=True):
     p=np.array(p)
 
     return x,p
-

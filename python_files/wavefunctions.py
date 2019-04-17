@@ -36,5 +36,11 @@ def gaussian_super(params): #Factory function to generate psi
     hbar=params['hbar']
     def psi(x):
         return np.exp((-(x-a)**2)/(2.0*sigma**2)) + np.exp((-(x+a)**2)/(2.0*sigma**2))
-    
+    return psi
+
+def bright_soliton(params):
+    amp=params['amp']
+    v=params['v']
+    def psi(x):
+        return amp/(np.cosh(amp*x))*np.exp(-1.j*v*x)
     return psi
