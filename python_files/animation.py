@@ -58,7 +58,7 @@ def main():
         return psi_real_line, psi_imag_line, psi_square_line, text1, text2
 
     def animate(i):
-        qs.time_evolve(dt, 33, config)
+        qs.time_evolve(dt, 1, config)
         psi_real_line.set_data(qs.x, qs._get_psi_x().real)
         psi_imag_line.set_data(qs.x, qs._get_psi_x().imag)
         psi_square_line.set_data(qs.x, np.abs(qs._get_psi_x())**2)

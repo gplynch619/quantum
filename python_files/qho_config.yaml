@@ -11,8 +11,6 @@ xstart: -20
 xstop_or_dx: 20.0
 endpoint_mode: True
 
-output: test
-
 potential:
   type: harmonic_potential
   params:

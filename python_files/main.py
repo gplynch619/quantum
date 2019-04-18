@@ -49,6 +49,15 @@ def setup(config):
 
     return T,ntime,dt,x,p,psi,v
 
+def write_log(strings, config):
+    
+    logfile='sim.log'
+    if 'logfile' in config:
+        logfile=config['logfile']
+    for string in strings:
+        subprocess.call("echo -e '{0}' >> {1}".format(string, logfile), shell=True)
+    subprocess.call("awk 'NF' {0} >> {1}".format(sys.argv[1], logfile), shell=True)
+
 def main():
     total_start=time.time()    
     config=load_config(sys.argv[1])
@@ -80,7 +89,7 @@ def main():
     fig,ax=plt.subplots()
     
     ax.plot(x, np.abs(qs._get_psi_x())**2)
-#    ax.plot(x, qs._get_psi_x().real, x, qs._get_psi_x().imag)
+    
     output_files=[]
     try:
         filename=config['plot_file']+'.png'
@@ -90,7 +99,7 @@ def main():
         plt.show()
     
     try:
-        filename=config['spectrum_file']+'.npz' 
+        filename=config['save_file']+'.npz' 
         np.savez(filename, energy_spec=energy_spec, ts=ts)
         output_files.append(filename)
     except:
@@ -108,18 +117,11 @@ def main():
     summary="Simulation potential: {0}\nSimulation wavefunction: {1}".format(config['potential']['type'], config['wavefunction']['type'])
     output_info="Simulation produced outputs: {}".format(" ".join(f for f in output_files))
     cfg_blurb="The following configuration was used:"
+   
+    strings=[header, summary, timing_info, output_info, cfg_blurb]
+    write_log(strings, config)
+    [print(s) for s in strings]
 
-    logfile='sim.log'
-    if 'logfile' in config:
-        logfile=config['logfile']
-
-    subprocess.call("echo -e '{0}' >> {1}".format(header, logfile), shell=True)
-    subprocess.call("echo -e '{0}' >> {1}".format(summary, logfile), shell=True)
-    subprocess.call("echo -e '{0}' >> {1}".format(timing_info, logfile), shell=True)
-    subprocess.call("echo -e '{0}' >> {1}".format(output_info, logfile), shell=True)
-    subprocess.call("echo -e '{0}' >> {1}".format(cfg_blurb, logfile), shell=True)
-    subprocess.call("awk 'NF' {0} >> {1}".format(sys.argv[1], logfile), shell=True)
-    
     sys.exit()
 if __name__=="__main__":
     main()
