@@ -7,6 +7,7 @@ and initial wavefunction. It is an implementation of the spectral method (see Fe
 built-in FFT that comes with numpy for its Fourier Transforms. 
 
 '''
+import os
 import sys
 import math
 import yaml
@@ -20,7 +21,7 @@ from scipy.signal import find_peaks
 from importlib import import_module
 from main import load_config, write_log
 
-def setup(config):
+def conv_setup(config):
     ##Set up time steps##
     T=config['T']
     ntime_str=config['ntime']
@@ -64,10 +65,15 @@ def find_nearest(arr, value):
 
 def main():
     total_start=time.time()    
-    config=load_config(sys.argv[1])
-    T,ntime,dt,x,p,psi,v = setup(config)
-    sim_start=time.time()
     
+    outdir="outputs/"
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
+    
+    config=load_config(sys.argv[1])
+    T,ntime,dt,x,p,psi,v = conv_setup(config)
+    sim_start=time.time()
+    outdir='outputs/' 
     estimates=[]
     wfunc_rmse=[]
     for i, sim in enumerate(ntime):
@@ -108,18 +114,25 @@ def main():
     ###LOG OUTPUT### 
     
     output_files=[]
-    if 'save_file' in config:
-        filename=config['save_file']+'.npz' 
-        np.savez(filename, estimates=estimates, rmse=wfunc_rmse, steps=ntime, dts=dt)
+    now = datetime.datetime.now()
+    
+    if config['save_file']:
+        cfg_name=os.path.split(sys.argv[1])[-1]
+        cfg_name=cfg_name.split(".")[0]
+        try:
+            filename=config['save_file_name']+"_"+now.strftime("%Y-%m-%d")+'.npz' 
+        except:
+            filename=cfg_name+"_"+now.strftime("%Y-%m-%d")+'.npz' 
+        np.savez(outdir+filename, estimates=estimates, rmse=wfunc_rmse, steps=ntime, dts=dt) 
         output_files.append(filename)
 
-    now = datetime.datetime.now()
     peak_info="Peak estimates at {}".format(estimates)
-    rmse_info="Peak estimates at {}".format(wfunc_rmse)
+    rmse_info="rmse estimates are {}".format(wfunc_rmse)
     header="==============================================\nRECORD CREATED {0}\n".format(now.strftime("%Y-%m-%d %H:%M"))
     summary="Simulation potential: {0}\nSimulation wavefunction: {1}".format(config['potential']['type'], config['wavefunction']['type'])
     output_info="Simulation produced outputs: {}".format(" ".join(f for f in output_files))
-    cfg_blurb="The following configuration was used: {}".format(sys.argv[1])
+    cfg_blurb="The following configuration was used: {}".format(os.path.split(sys.argv[1])[-1])
+    print_rates(wfunc_rmse)
 
     total_end=time.time()
     total_time=total_end-total_start
@@ -127,9 +140,9 @@ def main():
     
     strings=[header, timing_info, summary, peak_info, rmse_info, output_info, cfg_blurb]
    
-    write_log(strings, config)
-
     [print(s) for s in strings]
+
+    write_log(strings, config)
     
     sys.exit()
 if __name__=="__main__":

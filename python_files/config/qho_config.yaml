@@ -1,0 +1,29 @@
+---
+mass: &mass 1.0
+hbar: &hbar 1.0
+omega: &omega 1.0
+
+T: 100.0
+ntime: 2000
+
+N: 512
+xstart: -20
+xstop_or_dx: 20.0
+endpoint_mode: True
+
+save_file: qho_config
+
+potential:
+  type: harmonic_potential
+  params:
+    mass: *mass
+    omega: *omega
+    hbar: *hbar
+
+wavefunction:
+  type: energy_eigenstate
+  params:
+    level: 0
+    mass: *mass
+    omega: *omega
+    hbar: *hbar

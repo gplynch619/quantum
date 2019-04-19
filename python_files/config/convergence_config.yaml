@@ -4,12 +4,15 @@ hbar: &hbar 1.0
 omega: &omega 1.0
 
 T: 100.0
-ntime: 2000
+ntime: 16 32 64 128 256 512 1024 2048
 
-N: 512
+N: 2048
 xstart: -20
 xstop_or_dx: 20.0
 endpoint_mode: True
+
+logfile: conv.log
+save_file: time_convergence
 
 potential:
   type: harmonic_potential

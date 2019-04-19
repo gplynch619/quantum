@@ -7,6 +7,7 @@ and initial wavefunction. It is an implementation of the spectral method (see Fe
 built-in FFT that comes with numpy for its Fourier Transforms. 
 
 '''
+import os
 import sys
 import math
 import yaml
@@ -63,6 +64,10 @@ def main():
     config=load_config(sys.argv[1])
     T,ntime,dt,x,p,psi,v = setup(config)
 
+    outdir="outputs/"
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
+    
     try:
         qs = System(x, psi, v, nonlinear=config['nonlinear'])
     except:   
@@ -89,8 +94,11 @@ def main():
     fig,ax=plt.subplots()
     
     ax.plot(x, np.abs(qs._get_psi_x())**2)
-    
+   
+    #SAVING
     output_files=[]
+    
+    now = datetime.datetime.now()
     try:
         filename=config['plot_file']+'.png'
         plt.savefig(filename)
@@ -99,10 +107,12 @@ def main():
         plt.show()
     
     try:
-        filename=config['save_file']+'.npz' 
-        np.savez(filename, energy_spec=energy_spec, ts=ts)
+        filename=config['save_file']+'_'+now.strftime("%Y-%m-%d")+'.npz'
+        np.savez(outdir+filename, energy_spec=energy_spec, ts=ts)
         output_files.append(filename)
-    except:
+    except Exception as e:
+        print("No file saved")
+        print(e)
         pass
 
     total_end=time.time()
@@ -110,13 +120,12 @@ def main():
     sim_time=sim_end-sim_start
     total_time=total_end-total_start
     
-    now = datetime.datetime.now()
     timing_info="Simulation time: {0}\nTotal time {1}".format(sim_time, total_time)
     peak_info="Peaks at {}".format(peaks_t)
     header="==============================================\nRECORD CREATED {0}\n".format(now.strftime("%Y-%m-%d %H:%M"))
     summary="Simulation potential: {0}\nSimulation wavefunction: {1}".format(config['potential']['type'], config['wavefunction']['type'])
     output_info="Simulation produced outputs: {}".format(" ".join(f for f in output_files))
-    cfg_blurb="The following configuration was used:"
+    cfg_blurb="The following configuration was used: {}".format(os.path.split(sys.argv[1])[-1])
    
     strings=[header, summary, timing_info, output_info, cfg_blurb]
     write_log(strings, config)
