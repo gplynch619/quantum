@@ -18,7 +18,10 @@ def main():
 
     frames = int(3*T)
     
-    qs = System(x, psi, v)
+    try:
+        qs = System(x, psi, v, nonlinear=config['nonlinear'])
+    except:   
+        qs = System(x, psi, v) 
 
     ##Animation##
     #Setting up plot
@@ -32,10 +35,9 @@ def main():
     psi_square_line, = axes[1].plot([], [], lw=2)
 
     for ax in axes:
-        ax.set_xlim([-6, 6])
+        ax.set_xlim([qs.x[0], qs.x[-1]])
         ax.set_ylim([-1, 1])
    
-    axes[1].set_ylim([-.1, 1])
     text1 = axes[0].text(.15, 0.9, "", fontsize=16 ,transform=axes[0].transAxes)
     text2 = axes[1].text(.15, 0.9, "", fontsize=16, transform=axes[1].transAxes)
 

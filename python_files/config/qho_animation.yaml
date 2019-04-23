@@ -2,31 +2,32 @@
 mass: &mass 1.0
 hbar: &hbar 1.0
 omega: &omega 1.0
+##GRID##
+T: 100
+ntime: 1000
 
-T: 100.0
-ntime: 16 32 64 128 256 512 1024 2048 4096 8192 16384
-
-N: 2048
-xstart: -20
-xstop_or_dx: 20.0
+N: 1024
+xstart: -10
+xstop_or_dx: 10.0 #if endpoint_mode, then this is xstop
 endpoint_mode: True
+#######
 
-logfile: conv.log
-save_file: True 
+nonlinear: False
 
-exact: -0.5
+save: True
+output: qho_ground_state
 
 potential:
   type: harmonic_potential
   params:
     mass: *mass
-    omega: *omega
     hbar: *hbar
+    omega: *omega
 
 wavefunction:
   type: energy_eigenstate
   params:
     level: 0
     mass: *mass
-    omega: *omega
     hbar: *hbar
+    omega: *omega

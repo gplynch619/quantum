@@ -48,7 +48,7 @@ def conv_setup(config):
     xstop_or_dx=config['xstop_or_dx']
     grid_flag=config['endpoint_mode']
 
-    x,p = initialize_grid(-20, N, 20.0, endpoint_mode=grid_flag)
+    x,p = initialize_grid(xstart, N, xstop_or_dx, endpoint_mode=grid_flag)
 
     ##Set up wavefunction##
     psi_library=import_module('wavefunctions')
@@ -74,7 +74,6 @@ def main():
     T,ntime,dt,x,p,psi,v = conv_setup(config)
     sim_start=time.time()
     outdir='outputs/' 
-    estimates=[]
     wfunc_rmse=[]
     for i, sim in enumerate(ntime):
         try:
@@ -83,21 +82,7 @@ def main():
             qs = System(x, psi, v) 
         ts=np.fft.fftfreq(sim, dt[i])
         ts=np.fft.fftshift(ts)
-        cor_func_t=[]
-        for step in ts:
-            qs.time_evolve(dt[i], 1, config)
-            psi_cur=qs._get_psi_x()
-            psi0=qs._get_initial_psi()
-            temp_val=np.trapz(np.conjugate(psi0)*psi_cur, x=qs.x)
-            cor_func_t.append(temp_val)
-        cor_func_t=np.array(cor_func_t)
-
-        energy_spec=np.fft.fft(cor_func_t)/sim
-        energy_spec=np.fft.fftshift(energy_spec)    
-        peaks,_=find_peaks(energy_spec)
-        peaks_e=2*np.pi*ts[peaks]
-        final_est=find_nearest(peaks_e, -0.5)
-        estimates.append(final_est)
+        qs.time_evolve(dt[i], sim, config)
         
         psi_cur=np.abs(qs._get_psi_x())**2
         psi0=np.abs(qs._get_initial_psi())**2
@@ -108,7 +93,6 @@ def main():
     sim_end=time.time() 
     
     wfunc_rmse=np.array(wfunc_rmse)
-    estimates=np.array(estimates)
     
     sim_time=sim_end-sim_start
     ###LOG OUTPUT### 
@@ -123,22 +107,20 @@ def main():
             filename=config['save_file_name']+"_"+now.strftime("%Y-%m-%d")+'.npz' 
         except:
             filename=cfg_name+"_"+now.strftime("%Y-%m-%d")+'.npz' 
-        np.savez(outdir+filename, estimates=estimates, rmse=wfunc_rmse, steps=ntime, dts=dt) 
+        np.savez(outdir+filename, rmse=wfunc_rmse, steps=ntime, dts=dt) 
         output_files.append(filename)
 
-    peak_info="Peak estimates at {}".format(estimates)
     rmse_info="rmse estimates are {}".format(wfunc_rmse)
     header="==============================================\nRECORD CREATED {0}\n".format(now.strftime("%Y-%m-%d %H:%M"))
     summary="Simulation potential: {0}\nSimulation wavefunction: {1}".format(config['potential']['type'], config['wavefunction']['type'])
     output_info="Simulation produced outputs: {}".format(" ".join(f for f in output_files))
     cfg_blurb="The following configuration was used: {}".format(os.path.split(sys.argv[1])[-1])
-    print_rates(wfunc_rmse)
 
     total_end=time.time()
     total_time=total_end-total_start
     timing_info="Simulation time: {0}\nTotal time {1}".format(sim_time, total_time)
     
-    strings=[header, timing_info, summary, peak_info, rmse_info, output_info, cfg_blurb]
+    strings=[header, timing_info, summary, rmse_info, output_info, cfg_blurb]
    
     [print(s) for s in strings]
 

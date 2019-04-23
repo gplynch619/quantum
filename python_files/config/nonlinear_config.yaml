@@ -3,7 +3,7 @@ mass: &mass 1.0
 hbar: &hbar 1.0
 
 ##GRID##
-T: 1
+T: 12
 ntime: 1000
 
 N: 4096

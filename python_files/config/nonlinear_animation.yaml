@@ -3,10 +3,10 @@ mass: &mass 1.0
 hbar: &hbar 1.0
 
 ##GRID##
-T: 20
+T: 60
 ntime: 1000
 
-N: 512
+N: 1024
 xstart: -10
 xstop_or_dx: 10.0 #if endpoint_mode, then this is xstop
 endpoint_mode: True
@@ -28,6 +28,6 @@ wavefunction:
   type: bright_soliton
   params:
     amp: 0.5
-    v: 3.0
+    v: -3.0
     mass: *mass
     hbar: *hbar
