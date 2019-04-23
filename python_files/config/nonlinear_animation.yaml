@@ -7,14 +7,15 @@ T: 20
 ntime: 1000
 
 N: 512
-xstart: -20
-xstop_or_dx: 20.0 #if endpoint_mode, then this is xstop
+xstart: -10
+xstop_or_dx: 10.0 #if endpoint_mode, then this is xstop
 endpoint_mode: True
 #######
 
 nonlinear: True
 
-output: bright_soliton
+save: True
+output: bright_soliton_fixed
 
 potential:
   type: nonlinear_potential

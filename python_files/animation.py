@@ -24,7 +24,7 @@ def main():
     #Setting up plot
     fig, axes = plt.subplots(1,2)
     
-    plt.rc('text', usetex=True)
+#    plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
 
     psi_real_line, = axes[0].plot([], [], lw=2)
@@ -39,7 +39,7 @@ def main():
     text1 = axes[0].text(.15, 0.9, "", fontsize=16 ,transform=axes[0].transAxes)
     text2 = axes[1].text(.15, 0.9, "", fontsize=16, transform=axes[1].transAxes)
 
-    state='a=1 Coherent State of QHO'
+    state=config['output']
 
     axes[0].set_title(r"$\psi$, {}".format(state), fontsize=16)
     axes[1].set_title(r"$|\psi|^2$, {}".format(state), fontsize=16)
@@ -62,8 +62,8 @@ def main():
         psi_real_line.set_data(qs.x, qs._get_psi_x().real)
         psi_imag_line.set_data(qs.x, qs._get_psi_x().imag)
         psi_square_line.set_data(qs.x, np.abs(qs._get_psi_x())**2)
-        text1.set_text('t={}'.format(qs.t))
-        text2.set_text('t={}'.format(qs.t))
+        text1.set_text('t={:3.2f}'.format(qs.t))
+        text2.set_text('t={:3.2f}'.format(qs.t))
         return psi_real_line, psi_imag_line, psi_square_line
         print(i)
 
@@ -73,12 +73,13 @@ def main():
     mult=(1.0/fps)*1000
     anim = animation.FuncAnimation(fig, animate, init_func=init, frames=frames, interval=mult, blit=False)
     
-    try:
-        filename="{}.gif".format(config['output'])
-        anim.save(filename, dpi=80, writer='imagemagick')
-        print("Animation saved as {}".format(filename))
-    except:
-        print("No animation saved.")
+    if config['save']:
+        try:
+            filename="{}.gif".format(config['output'])
+            anim.save(filename, dpi=80, writer='imagemagick')
+            print("Animation saved as {}".format(filename))
+        except:
+            print("No animation saved.")
     plt.show()
 
 if __name__=="__main__":

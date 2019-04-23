@@ -20,5 +20,5 @@ def harmonic_potential(params):
 def nonlinear_potential(params):
     def v(psi):
         beta=params['beta']
-        return beta*np.abs(psi)**2
+        return beta*np.conj(psi)*psi
     return v
