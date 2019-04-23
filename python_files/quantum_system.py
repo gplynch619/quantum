@@ -94,11 +94,11 @@ class System(object):
         #so \nabla^2 <-> -p^2/h^2
 
         for i in np.arange(Nt):
-            self._psi_p *= np.exp(-1.j*dt*0.25*self.p*self.p/(hbar*m))
+            self._psi_p *= np.exp(1.j*dt*0.25*self.p*self.p/(hbar*m))
             self.compute_psi_x()
             self._psi_x *= np.exp(-1.j*dt*self.v_x)
             self.compute_psi_p()
-            self._psi_p *= np.exp(-1.j*dt*0.25*self.p*self.p/(hbar*m))
+            self._psi_p *= np.exp(1.j*dt*0.25*self.p*self.p/(hbar*m))
             if self.is_nonlinear():
                 self.compute_psi_x
                 self.update_v_x()

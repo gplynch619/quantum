@@ -104,7 +104,7 @@ def main():
         cfg_name=os.path.split(sys.argv[1])[-1]
         cfg_name=cfg_name.split(".")[0]
         try:
-            filename=config['save_file_name']+"_"+now.strftime("%Y-%m-%d")+'.npz' 
+            filename=sys.argv[2]+cfg_name+"_"+now.strftime("%Y-%m-%d")+'.npz' 
         except:
             filename=cfg_name+"_"+now.strftime("%Y-%m-%d")+'.npz' 
         np.savez(outdir+filename, rmse=wfunc_rmse, steps=ntime, dts=dt) 
