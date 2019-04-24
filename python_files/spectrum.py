@@ -28,7 +28,13 @@ def load_config(filename):
             print(exc)
 
 def setup(config):
-    ##Set up time steps##
+    ##Functions##
+    psi_library=import_module('wavefunctions')
+    psi=getattr(psi_library, config['wavefunction']['type'])(config['wavefunction']['params'])
+    v_library=import_module('potentials')
+    v=getattr(v_library, config['potential']['type'])(config['potential']['params'])
+    
+    ##Timesteps##
     T=config['T']
     ntime=config['ntime']
     dt=float(T)/ntime
@@ -41,13 +47,6 @@ def setup(config):
 
     x,p = initialize_grid(xstart, N, xstop_or_dx, endpoint_mode=grid_flag)
 
-    ##Set up wavefunction##
-    psi_library=import_module('wavefunctions')
-    psi=getattr(psi_library, config['wavefunction']['type'])(config['wavefunction']['params'])
-
-    v_library=import_module('potentials')
-    v=getattr(v_library, config['potential']['type'])(config['potential']['params'])
-
     return T,ntime,dt,x,p,psi,v
 
 def write_log(strings, config):
@@ -55,29 +54,30 @@ def write_log(strings, config):
     logfile='sim.log'
     if 'logfile' in config:
         logfile=config['logfile']
+    
     for string in strings:
         subprocess.call("echo -e '{0}' >> {1}".format(string, logfile), shell=True)
     subprocess.call("awk 'NF' {0} >> {1}".format(sys.argv[1], logfile), shell=True)
 
 def main():
     total_start=time.time()    
-    config=load_config(sys.argv[1])
-    T,ntime,dt,x,p,psi,v = setup(config)
-
     outdir="outputs/"
     if not os.path.exists(outdir):
         os.mkdir(outdir)
     
-    try:
-        qs = System(x, psi, v, nonlinear=config['nonlinear'])
-    except:   
-        qs = System(x, psi, v) 
-    ts=np.fft.fftfreq(ntime, dt)
-    ts=np.fft.fftshift(ts)
+    ##Load and set up fron config file##    
+    config=load_config(sys.argv[1])
+    T,ntime,dt,x,p,psi,v = setup(config)
+    ts=np.arange(start=0, stop=T, step=dt)
+    es=np.fft.fftfreq(ntime, dt)
+    es=np.fft.fftshift(es)
+    es=2*np.pi*es
+
+    qs = System(x, psi, v, nonlinear=config['nonlinear'])
+   
     cor_func_t=[]
     sim_start=time.time()
-    qs.time_evolve(dt, ntime, config)
-    for step in ts:
+    for step in range(ntime):
         qs.time_evolve(dt, 1, config)
         psi=qs._get_psi_x()
         psi0=qs._get_initial_psi()
@@ -87,10 +87,9 @@ def main():
 
     energy_spec=np.fft.fft(cor_func_t)/ntime
     energy_spec=np.fft.fftshift(energy_spec)    
-    peaks,_=find_peaks(energy_spec)
-    peaks_t=2*np.pi*ts[peaks]
+    peaks_idx,_=find_peaks(energy_spec)
+    peaks_e=es[peaks_idx]
     sim_end=time.time()
-
 
     fig,ax=plt.subplots()
   
@@ -98,24 +97,20 @@ def main():
     ax.plot(x, psi_plot)
    
     #SAVING
-    output_files=[]
-    
     now = datetime.datetime.now()
-    try:
-        filename=config['plot_file']+'.png'
-        plt.savefig(filename)
+    if config['save']:    
+        output_files=[]
+        if 'base_file_name' in config:
+            filename=config['base_file_name']+"_"+now.strftime("%Y-%m-%d")+'.npz' 
+        else:
+            cfg_name=os.path.split(sys.argv[1])[-1]
+            cfg_name=cfg_name.split(".")[0]
+            try:
+                filename=sys.argv[2]+cfg_name+"_"+now.strftime("%Y-%m-%d")+'.npz' 
+            except:
+                filename=cfg_name+"_"+now.strftime("%Y-%m-%d")+'.npz'
+        np.savez(outdir+filename, ts=ts, es=es, corr=corr_func_t, energy_spec=energy_spec, peaks=peaks_e) 
         output_files.append(filename)
-    except:
-        pass
-    
-    try:
-        filename=config['save_file']+'_'+now.strftime("%Y-%m-%d")+'.npz'
-        np.savez(outdir+filename, energy_spec=energy_spec, ts=ts)
-        output_files.append(filename)
-    except Exception as e:
-        print("No file saved")
-        print(e)
-        pass
 
     total_end=time.time()
     ###LOG OUTPUT### 

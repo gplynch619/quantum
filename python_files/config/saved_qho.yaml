@@ -11,8 +11,10 @@ xstart: -20
 xstop_or_dx: 20.0
 endpoint_mode: True
 
-spectrum_file: test
-plot_file: test
+nonlinear: False
+
+save: True
+base_file_name: saved_qho
 
 potential:
   type: harmonic_potential

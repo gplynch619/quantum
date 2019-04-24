@@ -11,8 +11,11 @@ xstart: -20
 xstop_or_dx: 20.0
 endpoint_mode: True
 
+nonlinear: False
+
+save: False
+base_file_name: time_convergence
 logfile: conv.log
-save_file: time_convergence
 
 potential:
   type: harmonic_potential

@@ -49,7 +49,7 @@ class System(object):
         self.compute_psi_p()
 
         if self.nonlinear:
-            self.v_x=v(np.asarray(self._get_psi_x()))
+            self.v_x=v(self._get_psi_x())
         else:
             self.v_x=v(self.x)
 
@@ -74,7 +74,7 @@ class System(object):
     
     #####
     def update_v_x(self):
-        self.v_x=self.v(np.asarray(self._get_psi_x()))
+        self.v_x=self.v(self._get_psi_x())
 
     def is_nonlinear(self):
         return self.nonlinear
@@ -94,11 +94,11 @@ class System(object):
         #so \nabla^2 <-> -p^2/h^2
 
         for i in np.arange(Nt):
-            self._psi_p *= np.exp(1.j*dt*0.25*self.p*self.p/(hbar*m))
+            self._psi_p *= np.exp(-1.j*dt*0.25*self.p*self.p/(hbar*m)) #negative comes from p<->-ihd_x
             self.compute_psi_x()
             self._psi_x *= np.exp(-1.j*dt*self.v_x)
             self.compute_psi_p()
-            self._psi_p *= np.exp(1.j*dt*0.25*self.p*self.p/(hbar*m))
+            self._psi_p *= np.exp(-1.j*dt*0.25*self.p*self.p/(hbar*m))
             if self.is_nonlinear():
                 self.compute_psi_x
                 self.update_v_x()

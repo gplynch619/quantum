@@ -14,20 +14,20 @@ endpoint_mode: True
 
 nonlinear: True
 
-save: True
-output: bright_soliton_fixed
+save: True 
+base_file_name: bright_soliton_fixed
 
 potential:
   type: nonlinear_potential
   params:
     mass: *mass
     hbar: *hbar
-    beta: 1.0
+    beta: -1.0
 
 wavefunction:
   type: bright_soliton
   params:
     amp: 0.5
-    v: -3.0
+    v: 2.0
     mass: *mass
     hbar: *hbar

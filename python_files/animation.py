@@ -2,26 +2,27 @@
 gabriel.p.lynch@gmail.com
 ANL-CPAC
 '''
+import os
 import math
 import sys
+import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 
 from matplotlib import animation
 from quantum_system import *
-from main import load_config, setup
+from spectrum import load_config, setup
 
 def main():
     
+    cfg_name=os.path.split(sys.argv[1])[-1]
+    cfg_name=cfg_name.split(".")[0]
     config=load_config(sys.argv[1])
     T,ntime,dt,x,p,psi,v=setup(config)
 
     frames = int(3*T)
     
-    try:
-        qs = System(x, psi, v, nonlinear=config['nonlinear'])
-    except:   
-        qs = System(x, psi, v) 
+    qs = System(x, psi, v, nonlinear=config['nonlinear'])
 
     ##Animation##
     #Setting up plot
@@ -40,11 +41,13 @@ def main():
    
     text1 = axes[0].text(.15, 0.9, "", fontsize=16 ,transform=axes[0].transAxes)
     text2 = axes[1].text(.15, 0.9, "", fontsize=16, transform=axes[1].transAxes)
+    if 'base_file_name' in config:
+        state_name=config['base_file_name']
+    else:
+        state_name=cfg_name
 
-    state=config['output']
-
-    axes[0].set_title(r"$\psi$, {}".format(state), fontsize=16)
-    axes[1].set_title(r"$|\psi|^2$, {}".format(state), fontsize=16)
+    axes[0].set_title(r"$\psi$, {}".format(state_name), fontsize=16)
+    axes[1].set_title(r"$|\psi|^2$, {}".format(state_name), fontsize=16)
 
     axes[0].legend((psi_real_line, psi_imag_line), (r'$Re(\psi)$', r'$Im(\psi)$'))
 
@@ -75,13 +78,21 @@ def main():
     mult=(1.0/fps)*1000
     anim = animation.FuncAnimation(fig, animate, init_func=init, frames=frames, interval=mult, blit=False)
     
-    if config['save']:
-        try:
-            filename="{}.gif".format(config['output'])
-            anim.save(filename, dpi=80, writer='imagemagick')
-            print("Animation saved as {}".format(filename))
-        except:
-            print("No animation saved.")
+    now = datetime.datetime.now()
+    if config['save']:    
+        if 'base_file_name' in config:
+            try:
+                filename=sys.argv[2]+"_"+config['base_file_name']+"_"+now.strftime("%Y-%m-%d")+'.gif' 
+            except:
+                filename=config['base_file_name']+"_"+now.strftime("%Y-%m-%d")+'.gif'
+        else:
+            try:
+                filename=sys.argv[2]+cfg_name+"_"+now.strftime("%Y-%m-%d")+'.gif' 
+            except:
+                filename=cfg_name+"_"+now.strftime("%Y-%m-%d")+'.gif'
+        anim.save(filename, dpi=80, writer='imagemagick')
+        print("Animation saved as {}".format(filename))
+        
     plt.show()
 
 if __name__=="__main__":

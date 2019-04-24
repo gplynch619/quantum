@@ -41,8 +41,13 @@ def main():
     print("Order: {}".format(m0))
     print("Order: {}".format(m1))
    
-    #plt.show()
-    fig.savefig('t10_timesteps_by_half.png')
+    plt.show()
+    try:
+        filename=sys.argv[2]+".png"
+    except:
+        filename=sys.argv[1].split(".")[0]
+    
+    #fig.savefig(filename)
 
 if __name__=='__main__':
     main()

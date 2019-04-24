@@ -19,10 +19,16 @@ from quantum_system import *
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 from importlib import import_module
-from main import load_config, write_log
+from spectrum import load_config, write_log
 
 def conv_setup(config):
     ##Set up time steps##
+    psi_library=import_module('wavefunctions')
+    psi=getattr(psi_library, config['wavefunction']['type'])(config['wavefunction']['params'])
+    v_library=import_module('potentials')
+    v=getattr(v_library, config['potential']['type'])(config['potential']['params'])
+    
+    ##Set up Time##
     T=config['T']
     ntime_str=config['ntime']
     ntime=None
@@ -39,9 +45,8 @@ def conv_setup(config):
         assert ntime is not None
     except:
         print("ntime not properly assigned")
-
     dt=np.array(dt)
-
+    
     ##Set up grid##
     N=config['N']
     xstart=config['xstart']
@@ -50,36 +55,22 @@ def conv_setup(config):
 
     x,p = initialize_grid(xstart, N, xstop_or_dx, endpoint_mode=grid_flag)
 
-    ##Set up wavefunction##
-    psi_library=import_module('wavefunctions')
-    psi=getattr(psi_library, config['wavefunction']['type'])(config['wavefunction']['params'])
-
-    v_library=import_module('potentials')
-    v=getattr(v_library, config['potential']['type'])(config['potential']['params'])
-
     return T,ntime,dt,x,p,psi,v
-
-def find_nearest(arr, value):
-    idx=(np.abs(arr-value)).argmin()
-    return arr[idx]
 
 def main():
     total_start=time.time()    
-    
     outdir="outputs/"
     if not os.path.exists(outdir):
         os.mkdir(outdir)
-    
+   
+    ##Load and set up## 
     config=load_config(sys.argv[1])
     T,ntime,dt,x,p,psi,v = conv_setup(config)
+    
     sim_start=time.time()
-    outdir='outputs/' 
     wfunc_rmse=[]
     for i, sim in enumerate(ntime):
-        try:
-            qs = System(x, psi, v, nonlinear=config['nonlinear'])
-        except:   
-            qs = System(x, psi, v) 
+        qs = System(x, psi, v, nonlinear=config['nonlinear'])
         ts=np.fft.fftfreq(sim, dt[i])
         ts=np.fft.fftshift(ts)
         qs.time_evolve(dt[i], sim, config)
@@ -90,23 +81,27 @@ def main():
         rmse=np.sqrt(mse)
         wfunc_rmse.append(rmse)
         del qs 
-    sim_end=time.time() 
     
     wfunc_rmse=np.array(wfunc_rmse)
     
+    sim_end=time.time() 
     sim_time=sim_end-sim_start
+    
     ###LOG OUTPUT### 
     
-    output_files=[]
     now = datetime.datetime.now()
     
-    if config['save_file']:
-        cfg_name=os.path.split(sys.argv[1])[-1]
-        cfg_name=cfg_name.split(".")[0]
-        try:
-            filename=sys.argv[2]+cfg_name+"_"+now.strftime("%Y-%m-%d")+'.npz' 
-        except:
-            filename=cfg_name+"_"+now.strftime("%Y-%m-%d")+'.npz' 
+    if config['save']:    
+        output_files=[]
+        if 'base_file_name' in config:
+            filename=config['base_file_name']+"_"+now.strftime("%Y-%m-%d")+'.npz' 
+        else:
+            cfg_name=os.path.split(sys.argv[1])[-1]
+            cfg_name=cfg_name.split(".")[0]
+            try:
+                filename=sys.argv[2]+cfg_name+"_"+now.strftime("%Y-%m-%d")+'.npz' 
+            except:
+                filename=cfg_name+"_"+now.strftime("%Y-%m-%d")+'.npz'
         np.savez(outdir+filename, rmse=wfunc_rmse, steps=ntime, dts=dt) 
         output_files.append(filename)
 

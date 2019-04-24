@@ -15,7 +15,7 @@ endpoint_mode: True
 nonlinear: False
 
 save: True
-output: qho_ground_state
+base_file_name: qho_ground_state
 
 potential:
   type: harmonic_potential

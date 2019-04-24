@@ -11,8 +11,12 @@ xstart: -20
 xstop_or_dx: 20.0
 endpoint_mode: True
 
+nonlinear: False
+
+save: True 
+base_file_name: t10_ts_100_to_5k
+
 logfile: conv.log
-save_file: True 
 
 potential:
   type: harmonic_potential

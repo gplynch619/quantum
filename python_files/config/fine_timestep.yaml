@@ -11,8 +11,11 @@ xstart: -20
 xstop_or_dx: 20.0
 endpoint_mode: True
 
+nonlinear: False
+
+save: False
+base_file_name: fine_timestep 
 logfile: conv.log
-save_file: True 
 
 potential:
   type: harmonic_potential
