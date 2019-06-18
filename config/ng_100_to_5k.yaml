@@ -1,0 +1,32 @@
+---
+mass: &mass 1.0
+hbar: &hbar 1.0
+omega: &omega 1.0
+
+T: 100.0
+
+ntime: 2048
+
+N: 16 32 64 128 256 512 1024 2048 4096 8192 16384
+
+xstart: -50
+xstop_or_dx: 50
+endpoint_mode: True
+
+logfile: x_conv.log
+save_file: False
+
+potential:
+  type: harmonic_potential
+  params:
+    mass: *mass
+    omega: *omega
+    hbar: *hbar
+
+wavefunction:
+  type: energy_eigenstate
+  params:
+    level: 0
+    mass: *mass
+    omega: *omega
+    hbar: *hbar
