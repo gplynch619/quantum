@@ -11,10 +11,12 @@ xstart: -20
 xstop_or_dx: 20.0
 endpoint_mode: True
 
-logfile: conv.log
-save_file: False 
+nonlinear: False
 
-exact: -0.5
+save: True 
+base_file_name: timesteps_by_half 
+
+logfile: conv.log
 
 potential:
   type: harmonic_potential

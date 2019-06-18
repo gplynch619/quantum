@@ -11,7 +11,10 @@ xstart: -20
 xstop_or_dx: 20.0
 endpoint_mode: True
 
-save_file: qho_config
+nonlinear: False
+
+save: False
+base_file_name: qho_config
 
 potential:
   type: harmonic_potential

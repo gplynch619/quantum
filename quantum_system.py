@@ -12,7 +12,7 @@ import numpy as np
 
 class System(object):
     
-    def __init__(self, x, psi, v, nonlinear=False):
+    def __init__(self, x, psi, v, nonlinear=False, bc='periodic'):
         '''
         Initializer for quantum system
         Parameters
@@ -29,19 +29,23 @@ class System(object):
         '''
         self.nonlinear=nonlinear
         self.v=v
-
-        self.N=x.shape[0]
-        self.dx=x[1]-x[0]
-        self.dp=2*np.pi/(self.N*self.dx)
         
+        if bc=='periodic':
+            self.x=Periodic_Grid(x)
+        else:
+            self.x=x
+            
+        self.t=0
+
+        self.N=self.x.shape[0]
+        self.dx=self.x[1]-self.x[0]
+        
+        self.dp=2*np.pi/(self.N*self.dx)
         self.p0=-0.5*self.N*self.dp
         self.p=self.p0 + self.dp*np.arange(self.N)
         
-        self.x=x
-        self.t=0
-        
-        self._set_psi_x(psi(x))
-        self._set_initial_psi(psi(x))
+        self._set_psi_x(psi(self.x))
+        self._set_initial_psi(psi(self.x))
         self.compute_psi_p()
 
         if self.nonlinear:
@@ -90,7 +94,7 @@ class System(object):
         #so \nabla^2 <-> -p^2/h^2
 
         for i in np.arange(Nt):
-            self._psi_p *= np.exp(-1.j*dt*0.25*self.p*self.p/(hbar*m))
+            self._psi_p *= np.exp(-1.j*dt*0.25*self.p*self.p/(hbar*m)) #negative comes from p<->-ihd_x
             self.compute_psi_x()
             self._psi_x *= np.exp(-1.j*dt*self.v_x)
             self.compute_psi_p()
@@ -100,6 +104,71 @@ class System(object):
                 self.update_v_x()
 
         self.t += dt*Nt
+
+class Periodic_Grid(np.ndarray):
+    def __new__(cls, input_array):
+        obj = np.asarray(input_array).view(cls)
+        obj.dtype=input_array.dtype
+        obj.grid_size = input_array.size
+        return obj
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            start=None
+            stop=None
+            print(index) 
+            
+            if index.start is None and index.stop is not None:
+                start=0
+                stop=index.stop
+            elif index.start is not None and index.stop is None :
+                start=index.start
+                stop=super().size
+            elif index.start is None and index.stop is None:
+                return np.asarray(super().__getitem__(index))
+            else:
+                start=index.start
+                stop=index.stop
+            
+            indices=list(range(start, stop))
+            size=len(indices)
+            a=np.empty(size, dtype=self.dtype)
+            print("Size: {0} indices: {1}".format(size, indices))
+            for i, ind in enumerate(indices): 
+                idx=self.wrapped_index(ind)
+                a[i]=self[idx]
+            return a
+
+        elif isinstance(index, tuple):
+            idx=index[0]
+            idx=self.wrapped_index(idx)
+            return super().__getitem__(idx)
+        elif isinstance(index, int):
+            index = self.wrapped_index(index)
+            return super().__getitem__(index)
+        else:
+            print("RAISING EXCEPTION")
+            raise ValueError
+        
+    def __setitem__(self, index, item):
+        index = self.wrapped_index(index)
+        return super().__setitem__(index, item)
+
+    def __array_finalize__(self, obj):
+        if obj is None: return
+        self.grid_size = getattr(obj, 'grid_size', obj.size)
+        pass
+
+    def wrapped_index(self, index):
+        if type(index) is tuple:
+            index=index[0] #only support for 1D!
+            mod_index = index%self.grid_size
+            return mod_index
+        elif type(index) is int:
+            mod_index = index%self.grid_size
+            return mod_index
+        else:
+           return index 
 
 def initialize_grid(xstart,  ng, third, endpoint_mode=True):
     #this initializes a grid between xstart and xstop with ng points
