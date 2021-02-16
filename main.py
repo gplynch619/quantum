@@ -91,6 +91,8 @@ def main():
     peaks_e=es[peaks_idx]
     sim_end=time.time()
 
+    print(peaks_e)
+
     fig,ax=plt.subplots()
   
     psi_plot=np.asarray(np.abs(qs._get_psi_x())**2)
@@ -98,8 +100,8 @@ def main():
    
     #SAVING
     now = datetime.datetime.now()
+    output_files=[]
     if config['save']:    
-        output_files=[]
         if 'base_file_name' in config:
             filename=config['base_file_name']+"_"+now.strftime("%Y-%m-%d")+'.npz' 
         else:
@@ -109,7 +111,7 @@ def main():
                 filename=sys.argv[2]+cfg_name+"_"+now.strftime("%Y-%m-%d")+'.npz' 
             except:
                 filename=cfg_name+"_"+now.strftime("%Y-%m-%d")+'.npz'
-        np.savez(outdir+filename, ts=ts, es=es, corr=corr_func_t, energy_spec=energy_spec, peaks=peaks_e) 
+        np.savez(outdir+filename, ts=ts, es=es, corr=cor_func_t, energy_spec=energy_spec, peaks=peaks_e) 
         output_files.append(filename)
 
     total_end=time.time()
@@ -118,7 +120,7 @@ def main():
     total_time=total_end-total_start
     
     timing_info="Simulation time: {0}\nTotal time {1}".format(sim_time, total_time)
-    peak_info="Peaks at {}".format(peaks_t)
+    peak_info="Peaks at {}".format(peaks_e)
     header="==============================================\nRECORD CREATED {0}\n".format(now.strftime("%Y-%m-%d %H:%M"))
     summary="Simulation potential: {0}\nSimulation wavefunction: {1}".format(config['potential']['type'], config['wavefunction']['type'])
     output_info="Simulation produced outputs: {}".format(" ".join(f for f in output_files))

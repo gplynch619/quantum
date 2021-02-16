@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 from matplotlib import animation
 from quantum_system import *
-from spectrum import load_config, setup
+from main import load_config, setup
 
 def main():
     
